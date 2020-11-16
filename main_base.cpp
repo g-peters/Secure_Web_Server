@@ -1,38 +1,25 @@
-//
-// TSS INTERNAL USE ONLY
-//
-// BERTY: {
-//   You probably don't have to alter this 'main' file much or at all.
-//   The code to start programming on is server_base{.hpp,.cpp} and the tcp_server
-//   class I have outline for you.
-//   Please free to remove all my comments - It's in your hands now; it's your code! }
-
 #include <iostream>
-
 #include "server_base.hpp"
+#include <boost/asio.hpp>
 
-/*! \brief Main
- *  
- *  Requires one argument at the command line; the port number.
- */
 int main(int argc, char* argv[])
 {
-  try
-  {
-    if (argc != 2)
-    {
-      std::cerr << "Usage: " << argv[0] << " <port>\n";
-      return 1;
+    
+        try
+        {
+            if (argc != 2)
+            {
+                std::cerr << "Error: No port number provided\n";
+                return 1;
+            }
+
+            boost::asio::io_context context;  //io_service  - https://www.boost.org/doc/libs/1_66_0/doc/html/boost_asio/reference/io_service.html
+            server_start(std::atoi(argv[1]),context);
+        }
+        catch (std::exception& e)
+        {
+            std::cerr << "Exception: " << e.what() << "\n";
+        }
+
+        return 0;
     }
-
-    int port_number = atoi(argv[1]);
-
-    server_start(port_number);   // Server starts here - see server_base code
-  }
-  catch (std::exception& e)
-  {
-    std::cerr << "Exception at main(): " << e.what() << "\n";
-  }
-
-  return 0;
-}

@@ -1,41 +1,30 @@
-//
-// TSS INTERNAL USE ONLY
-//
-
-//#include <whatever>
-
 #include "tcp_server.hpp"
 
 
-/*! \brief Constructor
- *
- *  Set up resources for tcp_server
- */
-tcp_server::tcp_server(int port)
-{
-	// BERTY: { Create the 'socket' or 'boost::asio::io_context' etc. here
-	// or throw an error that it failed to be created. }
+void tcp_server::session(boost::asio::ip::tcp::socket sock) {
+    std::cout << "session function is called\n";
+    try
+    {
+        for (;;)
+        {
+            char data[1024];
+
+            boost::system::error_code error;
+            size_t length = sock.read_some(boost::asio::buffer(data), error);
+            if (error == boost::asio::error::eof)
+                break;
+            else if (error)
+                throw boost::system::system_error(error);
+            std::cout << data;
+
+            std::thread::id main_thread_id = std::this_thread::get_id();
+            std::cout << "\n\nTHIS THREAD ID = " << main_thread_id << "\n\n";
+            boost::asio::write(sock, boost::asio::buffer(data, length));
+            sock.close();
+        }
+    }
+    catch (std::exception& e)
+    {
+        std::cerr << "Exception in thread: " << e.what() << "\n";
+    }
 }
-
-/*! \brief Destructor
- *
- *  Safely close/free tcp_server resources
- */
-tcp_server::~tcp_server()
-{
-	// BERTY: { Clean up your resources here. }
-}
-
-/*! \brief
- *
- *  Detail of func here.
- */
-int tcp_server::await_connection()
-{
-	// BERTY: { I only guess you'll need this!?  Not sure what type it'll return.
-	//   Depends on if you use sockets, boost.asio, or something else. }
-}
-
-
-// BERTY: { Implement your other functions on the tcp_server class here... }
-

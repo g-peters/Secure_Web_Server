@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <fstream>
 #include <boost/filesystem.hpp>
+#include <boost/date_time.hpp>
 #include <string>
 #include "connection.hpp"
 #include "http_headers.hpp"
@@ -19,7 +20,7 @@ class tcp_server
 {
 public:
     tcp_server(boost::asio::io_context& io_service, short port);
-    void conn(socket_ptr sock);
+    void conn(socket_ptr sock, int port);
     void listen(boost::asio::io_context& io_service, short port);
     std::string parse_data(std::vector<char>& data);
     int check_method(std::string s, socket_ptr sock);
@@ -31,6 +32,7 @@ public:
     bool check__unsafe_data(std::string);
     std::string get_mime(std::string);
     mime_types MIME;
+
 
 
 private:

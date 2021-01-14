@@ -9,17 +9,27 @@ tcp_server::tcp_server(boost::asio::io_context& io_service, short port)
     
 }
 
-void tcp_server::conn(socket_ptr sock)
+void tcp_server::conn(socket_ptr sock, int port)
 {
+    boost::posix_time::ptime date_time = boost::posix_time::second_clock::local_time();
+    std::cout << date_time <<std::endl;
+
     std::cout << "Connected with Client:\n";
     try
     {
         std::vector<char> buff(1024);
         boost::system::error_code error;
         size_t length = sock->read_some(boost::asio::buffer(buff), error);
-        // std::for_each(buff.begin(), buff.end(), [](char i) {std::cout << i; }); //https://en.cppreference.com/w/cpp/algorithm/for_each
         std::string data = parse_data(buff);
-        check_method(parse_data(buff), sock);
+        bool safe = check__unsafe_data(data);
+        if (safe)
+        {
+            check_method(parse_data(buff), sock);
+        }
+        else
+        {
+            sock->close();
+        }
        
     }
     catch (std::exception& e)
@@ -38,7 +48,7 @@ void tcp_server::listen(boost::asio::io_context& io_service, short port)
             socket_ptr sock(new bsock(io_service));
             std::cout << "Server Listening for Connections:\n";
             acceptor.accept(*sock);
-            boost::thread t(boost::bind(&tcp_server::conn, this, sock));
+            boost::thread t(boost::bind(&tcp_server::conn, this, sock, port));
 
 
         }
@@ -154,8 +164,21 @@ void tcp_server::process_post(socket_ptr sock, std::string request)
 
 bool tcp_server::check__unsafe_data(std::string unchecked_data)
 {
-    
+    std::cout << "checking for bad strings\n";
+    std::vector<std::string> bad_strings = {"../","cmd","/..","../../../"};
+    for(int i = 0; i <bad_strings.size(); ++i)
+    {
+        int found =  unchecked_data.find("cmd");
+        if (found == -1){
+            std::cout << "found int " << found <<std::endl;
+            return true;
+
+        }
+       
+    }
+    std::cout << "Bad data found\n";
     return false;
+
 }
 
 

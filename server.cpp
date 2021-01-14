@@ -6,14 +6,15 @@
 
 int main(int argc, char* argv[])
 {
-   
+
     try
-    {
+    {    
         if (argc != 2)
         {
             std::cerr << "Error No Port Number Provided! \n";
             return 1;
         }
+        
 
         boost::asio::io_context io_context;
 

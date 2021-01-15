@@ -28,6 +28,7 @@ void tcp_server::conn(socket_ptr sock, int port)
         }
         else
         {
+
             sock->close();
         }
        
@@ -82,6 +83,7 @@ int tcp_server::check_method(std::string s, socket_ptr sock)
     request_line >> protocol;
 
     if (method == "GET") {
+        std::cout << "process get called\n";
         process_get(sock, request_target);
         return 0;
     }

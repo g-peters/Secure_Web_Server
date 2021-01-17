@@ -2,7 +2,6 @@
 
 
 
-
 std::string http_headers::get_full_header(std::string status, std::string content, int size, std::string disposition)
 {
 	// resetting headers to defaults
@@ -16,7 +15,7 @@ std::string http_headers::get_full_header(std::string status, std::string conten
 	head += http_header_2 += content += "\r\n";
 	head += http_header_3 += std::to_string(size) += "\r\n";
 	head += http_header_4 += "\r\n";
-	head += http_header_5 += disposition += "\r\n\r\n";
+	head += http_header_5 += disposition += "\"\r\n\r\n";
 
 	return head;
 }
@@ -65,6 +64,7 @@ http_headers::http_headers()
 		"<title>"
 		"404 NOT FOUND"
 		"</title>"
+		"<link rel = \"stylesheet\" href = \"stylesheet.css\" >"
 		"</head>"
 		"<h1>404 PAGE NOT FOUND</H1>"
 		"<body>"
@@ -77,6 +77,7 @@ http_headers::http_headers()
 		"<title>"
 		"Home"
 		"</title>"
+		"<link rel = \"stylesheet\" href = \"stylesheet.css\" >"
 		"</head>"
 		"<h1>Home</H1>"
 		"<body>"

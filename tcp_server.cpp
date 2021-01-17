@@ -1,20 +1,19 @@
 #include "tcp_server.hpp"
 
 
-tcp_server::tcp_server(boost::asio::io_context& io_service, short port)
+tcp_server::tcp_server(boost::asio::io_context& io_service, short port, logger& logs_) : logs(logs_)
 {
     listen(io_service, port); 
-    http_headers headers; 
-    mime_types MIME;
-    
 }
+
 
 void tcp_server::conn(socket_ptr sock, int port)
 {
     boost::posix_time::ptime date_time = boost::posix_time::second_clock::local_time();
     std::cout << date_time <<std::endl;
-
     std::cout << "Connected with Client:\n";
+    logs << "client connected IP : " + sock->remote_endpoint().address().to_string();
+    
     try
     {
         std::vector<char> buff(1024);
@@ -25,13 +24,12 @@ void tcp_server::conn(socket_ptr sock, int port)
         if (safe)
         {
             check_method(parse_data(buff), sock);
-        }
+        }/*
         else
         {
-
             sock->close();
         }
-       
+       */
     }
     catch (std::exception& e)
     {
@@ -65,7 +63,6 @@ std::string tcp_server::parse_data(std::vector<char>& data)
     std::string client_data;
     // lambda to parse vector and put it into a string
     std::for_each(data.begin(), data.end(), [&](char i) {client_data.push_back(i); });
-    // look_for_invalid chars(); <- need to make
     std::cout << client_data;
     return client_data;
 }
@@ -83,7 +80,6 @@ int tcp_server::check_method(std::string s, socket_ptr sock)
     request_line >> protocol;
 
     if (method == "GET") {
-        std::cout << "process get called\n";
         process_get(sock, request_target);
         return 0;
     }
@@ -101,11 +97,11 @@ int tcp_server::load_file_into_buffer(std::string filepath)
     boost::filesystem::path p{filepath};
     boost::system::error_code ec;
     int filesize = file_size(p, ec);
-    std::ifstream testFile(filepath, std::ios::binary);
+    std::ifstream file_to_send(filepath, std::ios::binary);
     file_buffer.reserve(filesize);
-    file_buffer.assign(std::istreambuf_iterator<char>(testFile),
+    file_buffer.assign(std::istreambuf_iterator<char>(file_to_send),
     std::istreambuf_iterator<char>());
-    testFile.close();
+    file_to_send.close();
     return filesize;
 }
 
@@ -123,6 +119,7 @@ void tcp_server::send_data(socket_ptr sock, std::string header, std::vector<char
 
 void tcp_server::process_get(socket_ptr sock, std::string request)
 {
+    logs << request;
     int body_size = headers.get_homepage().size();
     header = headers.get_full_header("200 OK", "text/html", body_size);
     if (request == "/")
@@ -133,22 +130,33 @@ void tcp_server::process_get(socket_ptr sock, std::string request)
     }
     else if (request == "/favicon.ico")
     {
-        int fl_sz = load_file_into_buffer("favicon.ico");
-        header = headers.get_full_header("200 OK", "image/x-icon", fl_sz);
-        send_data(sock, header, file_buffer, fl_sz);
+        int file_sz = load_file_into_buffer("favicon.ico");
+        header = headers.get_full_header("200 OK", "image/x-icon", file_sz);
+        send_data(sock, header, file_buffer, file_sz);
 
     }
     else if (boost::filesystem::exists(request.substr(1,request.size()))) //check file exists and remove beginning /
     {
-        std::cout << "file exists\n";
-        std::string attachment = "attachment; filename=";
-        attachment += request.substr(1, request.size());
+       
+        int pos = request.find_last_of("/") + 1;
+        std::string attachment = "attachment; filename=\"";
+        attachment += request.substr(pos, request.size());
+
         std::string extension = boost::filesystem::extension(request);
         std::string mime = get_mime(extension);
        
-        int fl_sz = load_file_into_buffer(request.substr(1, request.size()));
-        header = headers.get_full_header("200 OK", mime, fl_sz, attachment);
-        send_data(sock, header, file_buffer, fl_sz);
+        int file_sz = load_file_into_buffer(request.substr(1, request.size()));
+        if(extension == ".html")
+        {
+            header = headers.get_full_header("200 OK", mime, file_sz);
+
+        }
+        else
+        {
+            header = headers.get_full_header("200 OK", mime, file_sz, attachment);
+            std::cout << header << std::endl;
+        }
+        send_data(sock, header, file_buffer, file_sz);
 
     }
     else {
@@ -161,24 +169,23 @@ void tcp_server::process_get(socket_ptr sock, std::string request)
 void tcp_server::process_post(socket_ptr sock, std::string request)
 {
     std::cout << "Process Post called:\n";
+    // TO DO 
 
 }
 
 bool tcp_server::check__unsafe_data(std::string unchecked_data)
 {
-    std::cout << "checking for bad strings\n";
-    std::vector<std::string> bad_strings = {"../","cmd","/..","../../../"};
+    std::vector<std::string> bad_strings = {"../","cmd","/..","../../../","/etc/passwd"};
     for(int i = 0; i <bad_strings.size(); ++i)
     {
         int found =  unchecked_data.find("cmd");
         if (found == -1){
-            std::cout << "found int " << found <<std::endl;
             return true;
 
         }
        
     }
-    std::cout << "Bad data found\n";
+    std::cout << "Bad data found\n"; // debug
     return false;
 
 }

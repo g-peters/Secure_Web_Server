@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <boost/bind.hpp>
 #include <boost/smart_ptr.hpp>
@@ -13,13 +14,15 @@
 #include "connection.hpp"
 #include "http_headers.hpp"
 #include "mime_types.hpp"
+#include "logger.hpp"
 using boost::asio::ip::tcp;
 typedef boost::asio::ip::tcp::socket bsock;
 typedef boost::shared_ptr<bsock> socket_ptr;
+
 class tcp_server
 {
 public:
-    tcp_server(boost::asio::io_context& io_service, short port);
+    tcp_server(boost::asio::io_context& io_service, short port, logger& log);
     void conn(socket_ptr sock, int port);
     void listen(boost::asio::io_context& io_service, short port);
     std::string parse_data(std::vector<char>& data);
@@ -34,7 +37,6 @@ public:
     mime_types MIME;
 
 
-
 private:
     std::string header_to_send;
     std::string data_to_send;
@@ -42,6 +44,6 @@ private:
     std::vector<char> file_buffer;
     std::string header;
     http_headers headers;
-
+    logger& logs;
 };
 

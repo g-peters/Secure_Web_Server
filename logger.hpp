@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <boost/date_time.hpp>
+#include <mutex>
 
 
 class logger
@@ -15,6 +16,7 @@ public:
     ~logger();
 private:
 	std::ofstream log_file;
+	//std::mutex file_lock;
 
 };
 

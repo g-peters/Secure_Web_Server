@@ -8,7 +8,7 @@ std::string http_headers::get_full_header(std::string status, std::string conten
 	http_header_1 = "HTTP/1.1 ";
 	http_header_2 = "Content-Type: ";
 	http_header_3 = "Content-Length: ";
-	http_header_4 = "Connection: keep-alive "; 
+	http_header_4 = "Connection: close "; 
 	http_header_5 = "Content-Disposition: ";
 
 	std::string head = http_header_1 += status + "\r\n";
@@ -25,12 +25,22 @@ std::string http_headers::get_full_header(std::string status, std::string conten
 	http_header_1 = "HTTP/1.1 ";
 	http_header_2 = "Content-Type: ";
 	http_header_3 = "Content-Length: ";
-	http_header_4 = "Connection: keep-alive ";
-	http_header_5 = "Content-Disposition: ";
+	http_header_4 = "Connection: close ";
 
 	std::string head = http_header_1 += status + "\r\n";
 	head += http_header_2 += content += "\r\n";
 	head += http_header_3 += std::to_string(size) += "\r\n";
+	head += http_header_4 += "\r\n\r\n";
+	
+	return head;
+}
+std::string http_headers::get_just_header(std::string status, std::string content)
+{
+	// resetting headers to defaults
+	http_header_1 = "HTTP/1.1 ";
+	http_header_4 = "Connection: close ";
+
+	std::string head = http_header_1 += status + "\r\n";
 	head += http_header_4 += "\r\n\r\n";
 	
 	return head;
@@ -51,14 +61,19 @@ std::string http_headers::get_400()
 	return html_400;
 }
 
+std::string http_headers::get_201()
+{
+	return html_201;
+}
 http_headers::http_headers()
 {
 	http_header_1 = "HTTP/1.1 ";
 	http_header_2 = "Content-Type: ";
 	http_header_3 = "Content-Length: ";
-	http_header_4 = "Connection: keep-alive ";
+	http_header_4 = "Connection: close";
 
 	html_404 = 
+		"<!DOCTYPE html>"
 		"<html>"
 		"<head>"
 		"<title>"
@@ -66,12 +81,15 @@ http_headers::http_headers()
 		"</title>"
 		"<link rel = \"stylesheet\" href = \"stylesheet.css\" >"
 		"</head>"
-		"<h1>404 PAGE NOT FOUND</H1>"
 		"<body>"
+		"<div id = \"main\">"
+		"<h1>404 PAGE NOT FOUND</H1>"
 		"<p>Hellooooo, We can't find what your looking for....</p>"
+		"</div>"
 		"</body>"
 		"</html>";
 	html_homepage = 
+		"<!DOCTYPE html>"
 		"<html>"
 		"<head>"
 		"<title>"
@@ -81,7 +99,29 @@ http_headers::http_headers()
 		"</head>"
 		"<h1>Home</H1>"
 		"<body>"
+		"<div id = \"main\">"
 		"<p>Welcome to the home page</p>"
+		"</div>"
 		"</body>"
 		"</html>";
+	html_201 = 
+		"<!DOCTYPE html>"
+		"<html>"
+		"<head>"
+		"<title>"
+		"Home"
+		"</title>"
+		"<link rel = \"stylesheet\" href = \"stylesheet.css\" >"
+		"</head>"
+		"<div id = \"main\">"
+		"<h1>Success</H1>"
+		"<body>"
+		"<p>Resource Successfully uploaded to server</p>"
+		"</div>"
+		"</body>"
+		"</html>";
+
+
+	
 }
+

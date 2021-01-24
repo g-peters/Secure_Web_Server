@@ -12,14 +12,17 @@ private:
 	std::string html_homepage;
 	std::string html_404;
     std::string html_400;
+    std::string html_201;
 public:
 	// standard http header
 	std::string get_full_header(std::string, std::string, int);
 	// function overload for file returning where disposition is needed in http header
 	std::string get_full_header(std::string, std::string, int, std::string);
+	std::string get_just_header(std::string status, std::string content);
 	std::string get_homepage();
 	std::string get_404();
 	std::string get_400();
+	std::string get_201();
 	http_headers();
 
 };

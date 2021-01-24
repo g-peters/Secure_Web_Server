@@ -11,7 +11,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/date_time.hpp>
 #include <string>
-#include "connection.hpp"
 #include "http_headers.hpp"
 #include "mime_types.hpp"
 #include "logger.hpp"
@@ -35,6 +34,7 @@ public:
     bool check__unsafe_data(std::string);
     std::string get_mime(std::string);
     mime_types MIME;
+    std::string get_cwd();
 
 
 private:

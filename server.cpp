@@ -5,10 +5,32 @@
 #include "server_base.hpp"
 #include "logger.hpp"
 #include <memory>
+#include <unistd.h>
+#include <filesystem>
+
+std::string get_cwd(){
+    char buff[128];
+    getcwd(buff,128);
+    std::string directory(buff);
+    return directory;
+
+}
 int main(int argc, char* argv[])
 {
+    std::string cwd = get_cwd();
+    int success = chroot(cwd.c_str());
+    if(success)
+    {
+        std::cout << "CHROOT SUCCESSFUL\n";
+    }
+    
+    else
+    {
+        std::cout << "CHROOT UNSUCCESSFUL\n";
+    }
     logger logs;
     std::string abc = "server started\n";
+    logs << abc;
     try
     {    
         

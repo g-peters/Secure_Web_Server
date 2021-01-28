@@ -1,14 +1,13 @@
-#include "http_headers.hpp"
+#include "HTTP_Headers.hpp"
+#include <string>
 
-
-
-std::string http_headers::get_full_header(std::string status, std::string content, int size, std::string disposition)
+std::string HTTP_Headers::get_full_header(std::string status, std::string content, int size, std::string disposition)
 {
 	// resetting headers to defaults
 	http_header_1 = "HTTP/1.1 ";
 	http_header_2 = "Content-Type: ";
 	http_header_3 = "Content-Length: ";
-	http_header_4 = "Connection: close "; 
+	http_header_4 = "Connection: close ";
 	http_header_5 = "Content-Disposition: ";
 
 	std::string head = http_header_1 += status + "\r\n";
@@ -19,7 +18,7 @@ std::string http_headers::get_full_header(std::string status, std::string conten
 
 	return head;
 }
-std::string http_headers::get_full_header(std::string status, std::string content, int size)
+std::string HTTP_Headers::get_full_header(std::string status, std::string content, int size)
 {
 	// resetting headers to defaults
 	http_header_1 = "HTTP/1.1 ";
@@ -31,10 +30,10 @@ std::string http_headers::get_full_header(std::string status, std::string conten
 	head += http_header_2 += content += "\r\n";
 	head += http_header_3 += std::to_string(size) += "\r\n";
 	head += http_header_4 += "\r\n\r\n";
-	
+
 	return head;
 }
-std::string http_headers::get_just_header(std::string status, std::string content)
+std::string HTTP_Headers::get_just_header(std::string status, std::string content)
 {
 	// resetting headers to defaults
 	http_header_1 = "HTTP/1.1 ";
@@ -42,37 +41,37 @@ std::string http_headers::get_just_header(std::string status, std::string conten
 
 	std::string head = http_header_1 += status + "\r\n";
 	head += http_header_4 += "\r\n\r\n";
-	
+
 	return head;
 }
 
-std::string http_headers::get_homepage()
+std::string HTTP_Headers::get_homepage()
 {
 	return html_homepage;
 }
 
-std::string http_headers::get_404()
+std::string HTTP_Headers::get_404()
 {
 	return html_404;
 }
 
-std::string http_headers::get_400()
+std::string HTTP_Headers::get_400()
 {
 	return html_400;
 }
 
-std::string http_headers::get_201()
+std::string HTTP_Headers::get_201()
 {
 	return html_201;
 }
-http_headers::http_headers()
+HTTP_Headers::HTTP_Headers()
 {
 	http_header_1 = "HTTP/1.1 ";
 	http_header_2 = "Content-Type: ";
 	http_header_3 = "Content-Length: ";
 	http_header_4 = "Connection: close";
 
-	html_404 = 
+	html_404 =
 		"<!DOCTYPE html>"
 		"<html>"
 		"<head>"
@@ -88,7 +87,7 @@ http_headers::http_headers()
 		"</div>"
 		"</body>"
 		"</html>";
-	html_homepage = 
+	html_homepage =
 		"<!DOCTYPE html>"
 		"<html>"
 		"<head>"
@@ -104,7 +103,7 @@ http_headers::http_headers()
 		"</div>"
 		"</body>"
 		"</html>";
-	html_201 = 
+	html_201 =
 		"<!DOCTYPE html>"
 		"<html>"
 		"<head>"
@@ -122,6 +121,6 @@ http_headers::http_headers()
 		"</html>";
 
 
-	
+
 }
 

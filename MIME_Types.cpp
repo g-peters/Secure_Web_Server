@@ -1,14 +1,30 @@
-#include "mime_types.hpp"
+#include "MIME_Types.hpp"
+
+
+std::string MIME_Types::get_mime(std::string filename)
+{
+    std::string extension = boost::filesystem::extension(filename); // gets extension from filename
+    extension = extension.substr(1, extension.size()); // removing . from start
+    std::string mime;
+
+    for (auto const& it : MIME) {
+        if (it.first == extension) {
+            mime = it.second;
+        }
+    }
+    return mime;
+}
 
 
 
-mime_types::mime_types()
+
+MIME_Types::MIME_Types()
 { // https://github.com/drodil/cpp-util/blob/master/file/mime/detector.hpp
     MIME = {
        {"evy", "application/envoy"},
        {"fif", "application/fractals"},
        {"spl", "application/futuresplash"},
-       {"hta", "application/hta"},
+       {"hta", "application/hta"}, 
        {"acx", "application/internet-property-stream"},
        {"hqx", "application/mac-binhex40"},
        {"doc", "application/msword"},
@@ -201,17 +217,4 @@ mime_types::mime_types()
        {"xaf", "x-world/x-vrml"},
        {"xof", "x-world/x-vrml"},
     };
-}
-
-std::string mime_types::get_mime(std::string extension)
-{
-    extension = extension.substr(1, extension.size()); // removing . from start
-    std::string mime;
-
-    for (auto const& it : MIME) {
-        if (it.first == extension) {
-            mime = it.second;
-      }
-    }
-    return mime;
 }

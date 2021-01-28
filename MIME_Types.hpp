@@ -1,10 +1,12 @@
+#pragma once
 #include <vector>
 #include <string>
 #include <iostream>
-class mime_types
+#include <boost/filesystem.hpp>
+class MIME_Types
 {
 public:
 	std::vector<std::pair<std::string, std::string>> MIME;
-	mime_types();
-	std::string get_mime(std::string );
+	MIME_Types();
+	std::string get_mime(std::string);
 };

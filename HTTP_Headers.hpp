@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-class http_headers {
+class HTTP_Headers {
 
 private:
 	std::string http_header_1;
@@ -11,8 +11,8 @@ private:
 	std::string http_header_5;
 	std::string html_homepage;
 	std::string html_404;
-    std::string html_400;
-    std::string html_201;
+	std::string html_400;
+	std::string html_201;
 public:
 	// standard http header
 	std::string get_full_header(std::string, std::string, int);
@@ -23,6 +23,6 @@ public:
 	std::string get_404();
 	std::string get_400();
 	std::string get_201();
-	http_headers();
+	HTTP_Headers();
 
 };

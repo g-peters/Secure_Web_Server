@@ -1,13 +1,17 @@
-#include "logger.hpp"
+#include "Logger.hpp"
+
+std::mutex file_lock; // any other way to initialize? 
+// putting in class member variables, the functions do not have access
 
 
-logger::~logger()
+Logger::~Logger()
 {
     log_file.close();
 }
 
-logger::logger()
+Logger::Logger(mutex_ptr& m):lock(std::move(m))
 {
+
     try
     {
         log_file.open("error_log.txt", std::ios::app);
@@ -19,9 +23,8 @@ logger::logger()
 
 
 
- logger& operator<<(logger& log,  std::string text)
- {
-    std::mutex file_lock;
+Logger& operator<<(Logger& log, std::string text)
+{
     std::lock_guard<std::mutex> file_locking(file_lock);
     std::cout << "Mutex Locked!\n";
     if (!log.log_file.is_open()) {
@@ -30,14 +33,14 @@ logger::logger()
             log.log_file.open("error_log.txt", std::ios::ate | std::ios::app);
         }
         catch (std::exception e) {
-             std::cout << e.what();
+            std::cout << e.what();
         }
     }
     boost::posix_time::ptime date_time =
-    boost::posix_time::second_clock::local_time();
+        boost::posix_time::second_clock::local_time();
     std::string datetime = boost::posix_time::to_simple_string(date_time);
     std::string to_log = datetime + " " + text;
-    log.log_file << to_log <<std::endl;
+    log.log_file << to_log << std::endl;
 
     return log;
 }

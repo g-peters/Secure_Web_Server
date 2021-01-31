@@ -3,9 +3,7 @@
 
 //std::vector<std::string> TCP_Server::non_allowed_strings = { "cmd","../","&&","uploads" };
 
-TCP_Server::~TCP_Server(){
-	delete this;
-}
+
 
 TCP_Server::TCP_Server(boost::asio::io_context& io, USHORT port, Logger& log): logger(log) 
 {
@@ -37,7 +35,7 @@ void TCP_Server::listen_connections(boost::asio::io_context& context, USHORT por
 		{
 			sock_ptr sock(new bsock(context));
 			acceptor.accept(*sock);
-			Connection* conn = new Connection(sock, logger);
+			std::shared_ptr<Connection> con(new Connection(sock,logger));
 		}
 	}
 	catch (std::exception& e)

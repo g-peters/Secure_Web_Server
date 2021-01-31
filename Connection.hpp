@@ -12,17 +12,10 @@
 #include "HTTP_Headers.hpp"
 #include "Logger.hpp"
 #include "MIME_Types.hpp"
-#include <unistd.h>
-#include <sys/prctl.h>
-#include <linux/seccomp.h>
-#include <linux/capability.h>
-
 using boost::asio::ip::tcp;
 typedef boost::asio::ip::tcp::socket bsock;
 typedef std::unique_ptr<bsock> sock_ptr;
-
 typedef unsigned short int USHORT;
-
 
 
 
@@ -34,7 +27,7 @@ public:
 	
 	void start();	
 	void receive();
-	void init_seccomp();
+	
 private:
 	sock_ptr sock;
 	std::vector<char> buff;

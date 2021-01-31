@@ -6,22 +6,12 @@ std::vector<std::string> non_allowed_string = { "cmd","../","&&","uploads" };
 Connection::Connection(sock_ptr& s, Logger& log) : sock(std::move(s)), logger(log) 
 {
 	buff.resize(1024);
-	std::cout << "connection class object called:\n";
 	start();
 }
-// initialise seccomp before any data received
-void Connection::init_seccomp()
-{
-	prctl(PR_SET_NO_NEW_PRIVS, 1); // is inherited by child threads (fork/clone)
-	prctl(PR_SET_DUMPABLE, 0); //
-}
 
-// creates new thread and calls new_connection which reads
-// from socket
 void Connection::start()
 {
-	std::cout << "start called in conn:\n";
-	std::thread thr([=] {new_connection();}); 
+	std::thread thr([=] {new_connection(); });
 	thr.join();
 }
 
@@ -29,8 +19,8 @@ void Connection::receive()
 {
 	std::thread::id this_id = std::this_thread::get_id();
 	std::cout << "thread " << this_id << "\n";
-    // socket will not read anymore than buffer size
-	int bytes = sock->read_some(boost::asio::buffer(buff)); 
+
+	int bytes = sock->read_some(boost::asio::buffer(buff));
 	std::for_each(buff.begin(), buff.end(), [&](char i) {std::cout << i; });
 
 
@@ -47,13 +37,10 @@ void Connection::add_non_allowed_string(std::string bad_string)
 
 void Connection::new_connection()
 {
-	std::cout << "NEW CONN CALLED, receiving data ... \n";
-	//std::vector<char> buff(256);
+	std::vector<char> buff(1024 * 10);
 	boost::system::error_code error;
 	int size = sock->read_some(boost::asio::buffer(buff), error);
 	buff.resize(size);
-	std::string data_rec = parse_data(buff);
-	std::cout << data_rec << std::endl;
 	check_method(parse_data(buff)); // passes socket and string returned from parse data to check _method
 
 
@@ -138,12 +125,12 @@ void Connection::process_get(std::string request)
 {
 	bool safe = check_data_unsafe(request);
 	if (safe) {
-		std::cout << "r:DATA IS NOT SAFE\n"; // debug
+		std::cout << "r:DATA IS NOT SAFE\n";
 
 	}
 	else
 	{
-		std::cout << "r:DATA IS SAFE\n"; //debug
+		std::cout << "r:DATA IS SAFE\n";
 	}
 	std::vector<char> buff;
 	HTTP_Headers headers;
@@ -213,12 +200,12 @@ void Connection::check_method(std::string data)
 {
 	bool safe = check_data_unsafe(data);
 	if (safe) {
-		std::cout << "m:DATA NOT SAFE\n"; //debugging
+		std::cout << "m:DATA NOT SAFE\n";
 
 	}
 	else
 	{
-		std::cout << "m:DATA IS SAFE\n"; // debugging
+		std::cout << "m:DATA IS SAFE\n";
 	}
 	USHORT EoL1 = data.find("\r\n"); // end of line 1 (EoL1)
 	std::string first_line = data.substr(0, EoL1);
@@ -236,6 +223,6 @@ void Connection::check_method(std::string data)
 	}
 	else
 	{
-		// Send response 405 
+		// Send response 405 ?
 	}
 }

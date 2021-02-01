@@ -25,7 +25,6 @@ class TCP_Server
 
 public:
 	TCP_Server(boost::asio::io_context&, USHORT, Logger&);
-	TCP_Server(boost::asio::io_context&, USHORT, Logger&, std::string);
 
 
 private:

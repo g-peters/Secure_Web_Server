@@ -2,7 +2,6 @@
 #include <iostream>
 #include <unistd.h>
 #include <sys/prctl.h>
-//#include <linux/seccomp.h>
 #include <seccomp.h>
 #include <linux/capability.h>
 #include <boost/asio.hpp>
@@ -25,17 +24,20 @@ int main(int argc, char* argv[])
 		
 		return 1;
 	}
-	prctl(PR_SET_NO_NEW_PRIVS, 1); // is inherited by child threads (fork/clone)
+	// is inherited by child threads (fork/clone)
+	prctl(PR_SET_NO_NEW_PRIVS, 1); 
 	prctl(PR_SET_DUMPABLE, 0);
 	boost::asio::io_context io;
 	mutex_ptr access_log_mutex;
 	mutex_ptr error_log_mutex;
-	bool seccomp_ = init_seccomp();
 
+	
+	
 
-
-		std::string cwd = get_cwd();  // get current directory
-    	int success = chroot(cwd.c_str()); // chroots the directory the server is started in
+		// get current directory
+		std::string cwd = get_cwd();  
+		// chroots the directory the server is started in
+    	int success = chroot(cwd.c_str()); 
     	if(success == 0)
     	{
         	std::cout << "CHROOT success\n";
@@ -48,11 +50,18 @@ int main(int argc, char* argv[])
 
         	std::cout << "CHROOT Unsuccessfull, please check permissions\n";
    		}
-	Logger log(access_log_mutex);
-	TCP_Server server(io, std::atoi(argv[1]), log); // standard server start with IO, and port number
-	
+   	// lower permissions from root to cyber
+   	setreuid(1000,1000); 
+   	// intilialize seccomp rules/ this also removes the ability to set setruid
+	bool seccomp_ = init_seccomp(); 
+	// creates logger object
+	Logger log(access_log_mutex); 
+    //standard server start with IO, and port number
+	TCP_Server server(io, std::atoi(argv[1]), log);
+
 	
 }
+// gets current working directory to be used to set chroot
 std::string get_cwd()
 {
     char buff[128];
@@ -62,6 +71,7 @@ std::string get_cwd()
 
 }
 
+// intitialize seccomp rules, the minimum rules requires for the server to run
 bool init_seccomp()
 {
  

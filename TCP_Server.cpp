@@ -7,27 +7,21 @@
 
 TCP_Server::TCP_Server(boost::asio::io_context& io, USHORT port, Logger& log): logger(log) 
 {
-	
+
+	// on server start, checks if uploads directory exists, if not creates it
 	if (!boost::filesystem::exists("uploads")) 
 	{
 		boost::filesystem::create_directory("uploads");
 	}
-	//homepage = "index.html";
-	std::cout << "Listen Called\n\n";
+	// listen for new connections
 	listen_connections(io, port);
 	
 }
 
-TCP_Server::TCP_Server(boost::asio::io_context& io, USHORT port, Logger& log, std::string new_bad_string) : logger(log)
-{
+// listen for connection, when connected, creates new connection object to handle that connection
 
-	listen_connections(io, port);
-
-}
 void TCP_Server::listen_connections(boost::asio::io_context& context, USHORT port)
 {
-	// listen for connection, when connected, creates thread and calls new connection
-	std::cout << "Listening\n\n";
 	try
 	{
 		tcp::acceptor acceptor(context, tcp::endpoint(tcp::v4(), port));

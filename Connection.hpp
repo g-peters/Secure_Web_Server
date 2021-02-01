@@ -12,6 +12,10 @@
 #include "HTTP_Headers.hpp"
 #include "Logger.hpp"
 #include "MIME_Types.hpp"
+#include <linux/capability.h>
+#include <sys/prctl.h>
+
+
 using boost::asio::ip::tcp;
 typedef boost::asio::ip::tcp::socket bsock;
 typedef std::unique_ptr<bsock> sock_ptr;
@@ -31,11 +35,17 @@ public:
 private:
 	sock_ptr sock;
 	std::vector<char> buff;
+	
 	std::vector<std::string> non_allowed_strings;
-	void new_connection(); // New connection called from listen in a new thread
+	// New connection called from listen in a new thread
+	void new_connection(); 
 	std::string get_date_time();
-	std::string parse_data(std::vector<char>&); // convert from char vec to std::string
-	bool check_data_unsafe(std::string); // check if data contains non allowed characters
+	// convert from char vec to std::string
+	std::string parse_data(std::vector<char>&); 
+
+	bool check_data_unsafe(std::string); 
+
+	// check if data contains non allowed characters
 	void send_data( std::string, std::string, int);
 	void send_data(std::string, std::vector<char>, int);
 	void process_post(std::string);

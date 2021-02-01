@@ -37,6 +37,8 @@ void Connection::add_non_allowed_string(std::string bad_string)
 
 void Connection::new_connection()
 {
+	//std::thread::id this_id = std::this_thread::get_id(); // testing purposes
+	//std::cout << "thread " << this_id << "\n"; // testing purposes
 	std::vector<char> buff(1024 * 10);
 	boost::system::error_code error;
 	int size = sock->read_some(boost::asio::buffer(buff), error);
@@ -78,7 +80,7 @@ bool Connection::check_data_unsafe(std::string unchecked_data)
 }
 
 
-
+// overloaded functions for sending data
 void Connection::send_data(std::string header, std::string body, int size)
 {
 	boost::asio::write(*sock, boost::asio::buffer(header, header.size()));
@@ -92,8 +94,14 @@ void Connection::send_data(std::string header, std::vector<char> body, int size)
 
 }
 
+
+// process post requests
 void Connection::process_post( std::string request)
 {
+	//std::thread::id this_id = std::this_thread::get_id(); // testing purposes
+	//std::cout << "thread " << this_id << "\n"; // testing purposes
+
+
 	bool safe = check_data_unsafe(request);
 	if (safe) {
 		std::cout << "p:DATA IS NOT SAFE\n";
@@ -124,15 +132,12 @@ void Connection::process_post( std::string request)
 void Connection::process_get(std::string request)
 {
 	bool safe = check_data_unsafe(request);
-	if (safe) {
-		std::cout << "r:DATA IS NOT SAFE\n";
-
-	}
-	else
+	// if data not safe is true, close connection to socket
+	if (safe) 
 	{
-		std::cout << "r:DATA IS SAFE\n";
+		sock->close();
 	}
-	std::vector<char> buff;
+
 	HTTP_Headers headers;
 	std::string header;
 	std::string body = "";
@@ -157,6 +162,7 @@ void Connection::process_get(std::string request)
 	// check if request is a path and if it exists
 	else if (boost::filesystem::exists(request.substr(1, request.size())))
 	{
+		std::cout << "File exists: " << request << std::endl;
 		int pos = request.find_last_of("/") + 1;
 		std::string attachment = "attachment; filename=\"";
 		std::string attach2 = request.substr(pos, request.size());
@@ -182,6 +188,7 @@ void Connection::process_get(std::string request)
 	}
 }
 
+// loads file (index.html/jpg's/txt files) into buffer for sending
 std::vector<char> Connection::load_file_into_buffer(std::string filepath)
 {
 	std::vector<char> filebuffer;
@@ -196,6 +203,7 @@ std::vector<char> Connection::load_file_into_buffer(std::string filepath)
 	return filebuffer;
 }
 
+// check whether post/get request
 void Connection::check_method(std::string data)
 {
 	bool safe = check_data_unsafe(data);
@@ -215,11 +223,16 @@ void Connection::check_method(std::string data)
 	split_line >> target; // gets Request path
 	if (method == "GET")
 	{
-		process_get(target);
+		
+			process_get(target);
+		
 	}
 	else if (method == "POST")
 	{
-		process_post(data);
+		// creates new thread for post request for further isolation
+		std::thread thr([=] {process_post(data); });
+		thr.join();
+	
 	}
 	else
 	{

@@ -14,7 +14,7 @@ void Connection::start()
 	std::thread thr([=] {new_connection(); });
 	thr.join();
 }
-
+/*
 void Connection::receive()
 {
 	std::thread::id this_id = std::this_thread::get_id();
@@ -27,6 +27,7 @@ void Connection::receive()
 	sock->close();
 	delete this;
 }
+*/
 
 void Connection::add_non_allowed_string(std::string bad_string)
 {
@@ -43,15 +44,22 @@ void Connection::new_connection()
 	boost::system::error_code error;
 	int size = sock->read_some(boost::asio::buffer(buff), error);
 	buff.resize(size);
+	if(check_data_unsafe(parse_data(buff)))
+	{
+		//log << "Received unacceptable data";
+		sock->close();
+	}
+	else
+	{
 	check_method(parse_data(buff)); // passes socket and string returned from parse data to check _method
-
+	}
 
 }
 
 std::string Connection::get_date_time() // http://boost.sourceforge.net/regression-logs/cs-win32_metacomm/doc/html/date_time.posix_time.html
 {
 	boost::posix_time::ptime d_t =
-		boost::posix_time::second_clock::local_time();
+	boost::posix_time::second_clock::local_time();
 	std::string date_time = boost::posix_time::to_simple_string(d_t);
 
 

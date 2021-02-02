@@ -30,7 +30,7 @@ public:
 	
 	
 	void start();	
-	void receive();
+	//void receive();
 	
 private:
 	sock_ptr sock;

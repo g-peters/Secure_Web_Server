@@ -5,7 +5,7 @@
 
 
 
-TCP_Server::TCP_Server(boost::asio::io_context& io, USHORT port, Logger& log): logger(log) 
+TCP_Server::TCP_Server(boost::asio::io_context& io, USHORT port, Logger& log, Logger& err): logger(log), err_log(err)
 {
 
 	// on server start, checks if uploads directory exists, if not creates it
@@ -29,11 +29,14 @@ void TCP_Server::listen_connections(boost::asio::io_context& context, USHORT por
 		{
 			sock_ptr sock(new bsock(context));
 			acceptor.accept(*sock);
+			//log << 
+			// client connects, new Connection object created, utilizing shared pointer for resource cleanup
 			std::shared_ptr<Connection> con(new Connection(sock,logger));
 		}
 	}
 	catch (std::exception& e)
 	{
+		err_log << e.what();
 		std::cout << "Error in Listen for connections: " << e.what() << std::endl;
 	}
 

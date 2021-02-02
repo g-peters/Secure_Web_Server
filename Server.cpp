@@ -21,7 +21,6 @@ int main(int argc, char* argv[])
 	if (argc != 2) 
 	{
 		std::cout << "Error, No port Number required" << std::endl;
-		
 		return 1;
 	}
 	// is inherited by child threads (fork/clone)
@@ -31,33 +30,28 @@ int main(int argc, char* argv[])
 	mutex_ptr access_log_mutex;
 	mutex_ptr error_log_mutex;
 
-	
-	
-
-		// get current directory
-		std::string cwd = get_cwd();  
-		// chroots the directory the server is started in
-    	int success = chroot(cwd.c_str()); 
-    	if(success == 0)
-    	{
-        	std::cout << "CHROOT success\n";
-        	cwd = get_cwd();
-        	std::cout <<"Current directory after CHROOT " << cwd <<std::endl; //debug
-   		}
-    
-   		else
-    	{
-
-        	std::cout << "CHROOT Unsuccessfull, please check permissions\n";
-   		}
+	// get current directory
+	std::string cwd = get_cwd();  
+	// chroots the directory the server is started in
+    int success = chroot(cwd.c_str()); 
+    if(success == 0)
+    {
+        cwd = get_cwd();
+   	}
+   	else
+    {
+        std::cout << "CHROOT Unsuccessfull, please check permissions\n";
+        return 1;
+   	}
    	// lower permissions from root to cyber
    	setreuid(1000,1000); 
    	// intilialize seccomp rules/ this also removes the ability to set setruid
 	bool seccomp_ = init_seccomp(); 
-	// creates logger object
-	Logger log(access_log_mutex); 
+	// creates logger objects
+	Logger access_log(access_log_mutex,"access_log.txt"); 
+	Logger error_log(error_log_mutex,"error_log.txt");
     //standard server start with IO, and port number
-	TCP_Server server(io, std::atoi(argv[1]), log);
+	TCP_Server server(io, std::atoi(argv[1]), access_log, error_log);
 
 	
 }
@@ -76,8 +70,6 @@ bool init_seccomp()
 {
  
  	scmp_filter_ctx ctx;
- 	//prctl(PR_SET_NO_NEW_PRIVS, 1); // is inherited by child threads (fork/clone)
-	//prctl(PR_SET_DUMPABLE, 0);
  	ctx = seccomp_init(SCMP_ACT_KILL);
 	seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(recvmsg), 0);
 	seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(accept), 0);

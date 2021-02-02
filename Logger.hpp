@@ -13,11 +13,15 @@ public:
 	Logger(const Logger&) = delete;
 	Logger& operator= (const Logger&) = delete;
 	friend Logger& operator << (Logger& log, std::string text);
-	Logger(mutex_ptr&);
+	Logger(mutex_ptr&, std::string);
 	~Logger();
+
 
 private:
 	std::ofstream log_file;
 	mutex_ptr lock;
+	void open_file();
+	std::string filename;
+
 };
 

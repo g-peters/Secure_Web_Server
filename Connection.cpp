@@ -14,20 +14,8 @@ void Connection::start()
 	std::thread thr([=] {new_connection(); });
 	thr.join();
 }
-/*
-void Connection::receive()
-{
-	std::thread::id this_id = std::this_thread::get_id();
-	std::cout << "thread " << this_id << "\n";
-
-	int bytes = sock->read_some(boost::asio::buffer(buff));
-	std::for_each(buff.begin(), buff.end(), [&](char i) {std::cout << i; });
 
 
-	sock->close();
-	delete this;
-}
-*/
 
 void Connection::add_non_allowed_string(std::string bad_string)
 {
@@ -56,16 +44,6 @@ void Connection::new_connection()
 
 }
 
-std::string Connection::get_date_time() // http://boost.sourceforge.net/regression-logs/cs-win32_metacomm/doc/html/date_time.posix_time.html
-{
-	boost::posix_time::ptime d_t =
-	boost::posix_time::second_clock::local_time();
-	std::string date_time = boost::posix_time::to_simple_string(d_t);
-
-
-	return date_time;
-}
-
 std::string Connection::parse_data(std::vector<char>& buff)
 {
 	std::string data;
@@ -76,15 +54,24 @@ std::string Connection::parse_data(std::vector<char>& buff)
 }
 
 bool Connection::check_data_unsafe(std::string unchecked_data)
-{
-	for (int i = 0; i < non_allowed_string.size(); ++i) {
-		int found = unchecked_data.find(non_allowed_string[i]);
-		if (found != std::string::npos) {
-			return true;
+{ 
+	// default chooses safer option of data being unsafe to close connection
+	bool bad_data_found = true;
+	std::for_each(non_allowed_string.begin(),non_allowed_string.end(), [&](std::string i){
+
+		if (unchecked_data.find(i) != std::string::npos)
+		{
+			//std::cout << "Bad string found!!!!!!!!" << i << std::endl;
+			bad_data_found = true;
+			sock->close();
 		}
-		else return false;
-	}
-	return false;
+		else
+		{
+			bad_data_found = false;
+		}
+	});
+	return bad_data_found;
+
 }
 
 
@@ -109,42 +96,42 @@ void Connection::process_post( std::string request)
 	//std::thread::id this_id = std::this_thread::get_id(); // testing purposes
 	//std::cout << "thread " << this_id << "\n"; // testing purposes
 
-
-	bool safe = check_data_unsafe(request);
-	if (safe) {
-		std::cout << "p:DATA IS NOT SAFE\n";
-
+	if (check_data_unsafe(request))
+	{
+		sock->close();
 	}
 	else
 	{
-		std::cout << "p:DATA IS SAFE\n";
+	
+		HTTP_Headers headers;
+		if (boost::filesystem::exists(UPLOADS)) {
+			std::string uploadpath = "uploads/testfile.txt";
+			USHORT end_of_header = request.find_last_of("\r\n");
+			std::string post_data = request.substr(end_of_header, request.size());
+			std::ofstream upload_file(uploadpath, std::ios::app);
+			upload_file << post_data << std::endl;
+			upload_file.close();
+		}
+		else
+		{
+			std::cout << "Error Upload dir does not exist\n";
+		}
+		std::string data = headers.get_201();
+		std::string header = headers.get_full_header("201 OK", "text/html", data.size());
+		send_data(header, data, data.size());
 	}
-	HTTP_Headers headers;
-	if (boost::filesystem::exists(UPLOADS)) {
-		std::string uploadpath = "uploads/testfile.txt";
-		USHORT end_of_header = request.find_last_of("\r\n");
-		std::string post_data = request.substr(end_of_header, request.size());
-		std::ofstream upload_file(uploadpath, std::ios::app);
-		upload_file << post_data << std::endl;
-		upload_file.close();
-	}
-	else
-	{
-		std::cout << "Error Upload dir does not exist\n";
-	}
-	std::string data = headers.get_201();
-	std::string header = headers.get_full_header("201 OK", "text/html", data.size());
-	send_data(header, data, data.size());
 }
 
 void Connection::process_get(std::string request)
 {
-	bool safe = check_data_unsafe(request);
+	//bool safe = check_data_unsafe(request);
 	// if data not safe is true, close connection to socket
-	if (safe) 
+	if (check_data_unsafe(request)) 
 	{
 		sock->close();
 	}
+	else
+	{
 
 	HTTP_Headers headers;
 	std::string header;
@@ -194,6 +181,7 @@ void Connection::process_get(std::string request)
 		header = headers.get_full_header("404 OK", "text/html", body.size());
 		send_data(header, body, body.size());
 	}
+	}
 }
 
 // loads file (index.html/jpg's/txt files) into buffer for sending
@@ -214,36 +202,33 @@ std::vector<char> Connection::load_file_into_buffer(std::string filepath)
 // check whether post/get request
 void Connection::check_method(std::string data)
 {
-	bool safe = check_data_unsafe(data);
-	if (safe) {
-		std::cout << "m:DATA NOT SAFE\n";
-
+	//bool safe = check_data_unsafe(data);
+	if (check_data_unsafe(data)) {
+		sock->close();
 	}
 	else
 	{
-		std::cout << "m:DATA IS SAFE\n";
-	}
-	USHORT EoL1 = data.find("\r\n"); // end of line 1 (EoL1)
-	std::string first_line = data.substr(0, EoL1);
-	std::istringstream split_line(first_line);
-	std::string method, target;
-	split_line >> method; // gets GET or POST
-	split_line >> target; // gets Request path
-	if (method == "GET")
-	{
-		
-			process_get(target);
-		
-	}
-	else if (method == "POST")
-	{
-		// creates new thread for post request for further isolation
-		std::thread thr([=] {process_post(data); });
-		thr.join();
 	
-	}
-	else
-	{
+		USHORT EoL1 = data.find("\r\n"); // end of line 1 (EoL1)
+		std::string first_line = data.substr(0, EoL1);
+		std::istringstream split_line(first_line);
+		std::string method, target;
+		split_line >> method; // gets GET or POST
+		split_line >> target; // gets Request path
+		if (method == "GET")
+		{
+			process_get(target);		
+		}
+		else if (method == "POST")
+		{
+			// creates new thread for post request for further isolation
+			std::thread thr([=] {process_post(data); });
+			thr.join();
+		
+		}
+		else
+		{
 		// Send response 405 ?
+		}
 	}
 }

@@ -39,7 +39,6 @@ private:
 	std::vector<std::string> non_allowed_strings;
 	// New connection called from listen in a new thread
 	void new_connection(); 
-	std::string get_date_time();
 	// convert from char vec to std::string
 	std::string parse_data(std::vector<char>&); 
 

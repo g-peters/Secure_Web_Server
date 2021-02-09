@@ -1,25 +1,26 @@
 #include "Connection.hpp"
+
 const std::string Connection::HOME_PAGE = "index.html";
 const std::string Connection::UPLOADS = "uploads";
 std::vector<std::string> non_allowed_string = { "cmd","../","&&","uploads" };
 
-Connection::Connection(sock_ptr& s, Logger& log) : sock(std::move(s)), logger(log) 
+// code adapted from (boost, n.d.)
+
+Connection::Connection(sock_ptr& s, Logger& log) : sock(std::move(s)), logger(log)
 {
 	buff.resize(1024);
+	// upon created, calls start
 	start();
 }
-
-void Connection::start()
+// destructor
+Connection::~Connection()
 {
+
+}
+void Connection::start()
+{   // create thread to handle connection
 	std::thread thr([=] {new_connection(); });
 	thr.join();
-}
-
-
-
-void Connection::add_non_allowed_string(std::string bad_string)
-{
-	non_allowed_strings.push_back(bad_string);
 }
 
 
@@ -28,22 +29,22 @@ void Connection::new_connection()
 {
 	//std::thread::id this_id = std::this_thread::get_id(); // testing purposes
 	//std::cout << "thread " << this_id << "\n"; // testing purposes
-	std::vector<char> buff(1024 * 10);
 	boost::system::error_code error;
 	int size = sock->read_some(boost::asio::buffer(buff), error);
 	buff.resize(size);
+	// check data doesn't contain unnacceptable strings
 	if(check_data_unsafe(parse_data(buff)))
 	{
-		//log << "Received unacceptable data";
 		sock->close();
 	}
 	else
 	{
+		// if data is safe, checks for http method
 	check_method(parse_data(buff)); // passes socket and string returned from parse data to check _method
 	}
 
 }
-
+// changes buffer data from char to string
 std::string Connection::parse_data(std::vector<char>& buff)
 {
 	std::string data;
@@ -53,13 +54,14 @@ std::string Connection::parse_data(std::vector<char>& buff)
 	return data;
 }
 
+// compares received data to vector of bad strings, if true, connection closes
 bool Connection::check_data_unsafe(std::string unchecked_data)
 { 
 	// default chooses safer option of data being unsafe to close connection
 	bool bad_data_found = true;
 	std::for_each(non_allowed_string.begin(),non_allowed_string.end(), [&](std::string i){
 
-		if (unchecked_data.find(i) != std::string::npos)
+		if (unchecked_data.find(i) != std::string::npos) // code adapted from
 		{
 			//std::cout << "Bad string found!!!!!!!!" << i << std::endl;
 			bad_data_found = true;
@@ -81,7 +83,7 @@ void Connection::send_data(std::string header, std::string body, int size)
 	boost::asio::write(*sock, boost::asio::buffer(header, header.size()));
 	boost::asio::write(*sock, boost::asio::buffer(body, body.size()));
 }
-
+// sends contents of buffer (sending files)
 void Connection::send_data(std::string header, std::vector<char> body, int size)
 {
 	boost::asio::write(*sock, boost::asio::buffer(header, header.size()));
@@ -95,7 +97,7 @@ void Connection::process_post( std::string request)
 {
 	//std::thread::id this_id = std::this_thread::get_id(); // testing purposes
 	//std::cout << "thread " << this_id << "\n"; // testing purposes
-
+	// checking data is safe again/ defence in depth
 	if (check_data_unsafe(request))
 	{
 		sock->close();
@@ -103,7 +105,7 @@ void Connection::process_post( std::string request)
 	else
 	{
 	
-		HTTP_Headers headers;
+		// all post requests stored in uploads directory, inaccessable from client
 		if (boost::filesystem::exists(UPLOADS)) {
 			std::string uploadpath = "uploads/testfile.txt";
 			USHORT end_of_header = request.find_last_of("\r\n");
@@ -130,13 +132,11 @@ void Connection::process_get(std::string request)
 	{
 		sock->close();
 	}
-	else
-	{
+	
 
-	HTTP_Headers headers;
+	//HTTP_Headers headers;
 	std::string header;
 	std::string body = "";
-	logger << request;
 	// homepage default
 	if (request == "/")
 	{
@@ -157,13 +157,13 @@ void Connection::process_get(std::string request)
 	// check if request is a path and if it exists
 	else if (boost::filesystem::exists(request.substr(1, request.size())))
 	{
-		std::cout << "File exists: " << request << std::endl;
 		int pos = request.find_last_of("/") + 1;
 		std::string attachment = "attachment; filename=\"";
 		std::string attach2 = request.substr(pos, request.size());
 		//attachment += request.substr(pos, request.size()); // filename
 		std::string mime = MIME.get_mime(request);
 		buff = load_file_into_buffer(request.substr(1, request.size()));
+		// checks to see if request is displayable in a browser (.html)
 		if (boost::filesystem::extension(request) == ".html")
 		{
 			header = headers.get_full_header("200 OK", mime, buff.size()); // to be displayed
@@ -181,8 +181,9 @@ void Connection::process_get(std::string request)
 		header = headers.get_full_header("404 OK", "text/html", body.size());
 		send_data(header, body, body.size());
 	}
-	}
 }
+		//attachment += request.substr(pos, request.size()); // filename
+
 
 // loads file (index.html/jpg's/txt files) into buffer for sending
 std::vector<char> Connection::load_file_into_buffer(std::string filepath)
@@ -202,7 +203,7 @@ std::vector<char> Connection::load_file_into_buffer(std::string filepath)
 // check whether post/get request
 void Connection::check_method(std::string data)
 {
-	//bool safe = check_data_unsafe(data);
+	// check_data_unsafe returns true if unsafe
 	if (check_data_unsafe(data)) {
 		sock->close();
 	}
@@ -211,6 +212,9 @@ void Connection::check_method(std::string data)
 	
 		USHORT EoL1 = data.find("\r\n"); // end of line 1 (EoL1)
 		std::string first_line = data.substr(0, EoL1);
+		// logs client request
+		logger << first_line;
+
 		std::istringstream split_line(first_line);
 		std::string method, target;
 		split_line >> method; // gets GET or POST
@@ -228,7 +232,12 @@ void Connection::check_method(std::string data)
 		}
 		else
 		{
-		// Send response 405 ?
+			// send 405, method not acceptable
+			std::string header;
+			std::string body = "";
+			body = headers.get_405();
+			header = headers.get_full_header("405 OK", "text/html", body.size());
+			send_data(header, body, body.size());
 		}
 	}
 }

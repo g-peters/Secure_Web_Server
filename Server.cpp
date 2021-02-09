@@ -11,6 +11,7 @@
 #include "TCP_Server.hpp"
 
 typedef std::unique_ptr<std::mutex> mutex_ptr;
+// function delcarations
 bool init_seccomp();
 std::string get_cwd();
 
@@ -23,7 +24,8 @@ int main(int argc, char* argv[])
 		std::cout << "Error, No port Number required" << std::endl;
 		return 1;
 	}
-	// is inherited by child threads (fork/clone)
+	// prctl used to set linux capabilities, code adapted from 
+
 	prctl(PR_SET_NO_NEW_PRIVS, 1); 
 	prctl(PR_SET_DUMPABLE, 0);
 	boost::asio::io_context io;
@@ -32,7 +34,7 @@ int main(int argc, char* argv[])
 
 	// get current directory
 	std::string cwd = get_cwd();  
-	// chroots the directory the server is started in
+	// chroots the directory the server is started in, code adapted from (Kerrisk, 2020a)
     int success = chroot(cwd.c_str()); 
     if(success == 0)
     {
@@ -45,7 +47,7 @@ int main(int argc, char* argv[])
    	}
    	// lower permissions from root to cyber
    	setreuid(1000,1000); 
-   	// intilialize seccomp rules/ this also removes the ability to set setruid
+   	// intilialize seccomp rules, this also removes the ability to set setruid
 	bool seccomp_ = init_seccomp(); 
 	// creates logger objects
 	Logger access_log(access_log_mutex,"access_log.txt"); 
@@ -65,11 +67,14 @@ std::string get_cwd()
 
 }
 
-// intitialize seccomp rules, the minimum rules requires for the server to run
+// intitialize seccomp rules, the minimum rules required for the server to run
+// code adapted from (Kerrisk, 2020b)
 bool init_seccomp()
 {
  
  	scmp_filter_ctx ctx;
+ 	// SCMP_ACT_KILL, if system call from below list is called, seccomp will kill the process
+ 	// sycalls made was determined using strace of the program and recording each as it was made
  	ctx = seccomp_init(SCMP_ACT_KILL);
 	seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(recvmsg), 0);
 	seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(accept), 0);
@@ -121,3 +126,23 @@ return true;
 
 
 
+// References
+/*
+
+boost. (n.d.). doc/html/boost_asio/example/cpp11/http/server/connection.cpp. Boost.org. 
+	Retrieved 2021, from https://www.boost.org/doc/libs/1_74_0/doc/html/boost_asio/example/cpp11/http/server/connection.cpp
+
+boost. (2017). Filesystem Tutorial. Boost.org. https://www.boost.org/doc/libs/1_75_0/libs/filesystem/doc/tutorial.html
+
+cppreference.com. (2017). std::basic_ofstream. Cppreference.Com. https://en.cppreference.com/w/cpp/io/basic_ofstream
+
+cppreference.com. (2020). std::for_each. Cppreference.Com. https://en.cppreference.com/w/cpp/algorithm/for_each
+
+cppreference.com. (2021). Lambda expressions. Cppreference.Com. https://en.cppreference.com/w/cpp/language/lambda
+
+Drodil. (2018). drodil/cpp-util. GitHub. https://github.com/drodil/cpp-util/blob/master/file/mime/detector.hpp
+
+Kerrisk, M. (2020a). chroot(2) - Linux manual page. Man7.Org. https://man7.org/linux/man-pages/man2/chroot.2.html
+
+Kerrisk, M. (2020b). seccomp(2) - Linux manual page. Man7.Org. https://man7.org/linux/man-pages/man2/seccomp.2.html
+*/

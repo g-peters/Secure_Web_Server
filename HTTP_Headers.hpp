@@ -13,6 +13,7 @@ private:
 	std::string html_404;
 	std::string html_400;
 	std::string html_201;
+	std::string html_405;
 public:
 	// standard http header
 	std::string get_full_header(std::string, std::string, int);
@@ -23,6 +24,8 @@ public:
 	std::string get_404();
 	std::string get_400();
 	std::string get_201();
+	std::string get_405();
+
 	HTTP_Headers();
 
 };

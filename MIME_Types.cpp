@@ -19,7 +19,7 @@ std::string MIME_Types::get_mime(std::string filename)
 
 
 MIME_Types::MIME_Types()
-{ // https://github.com/drodil/cpp-util/blob/master/file/mime/detector.hpp
+{ // code from (Drodil, 2018)
     MIME = {
        {"evy", "application/envoy"},
        {"fif", "application/fractals"},

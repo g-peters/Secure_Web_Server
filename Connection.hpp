@@ -27,7 +27,7 @@ class Connection
 {
 public:
 	Connection(sock_ptr& s, Logger&);
-	
+	~Connection();
 	
 	void start();	
 	//void receive();
@@ -49,11 +49,11 @@ private:
 	void send_data(std::string, std::vector<char>, int);
 	void process_post(std::string);
 	void process_get(std::string);
-	void add_non_allowed_string(std::string);
 	std::vector<char> load_file_into_buffer(std::string);
 	void check_method(std::string);
 	Logger& logger;
 	MIME_Types MIME; // to be used by all threads
+	HTTP_Headers headers;
 	// HTTP_Headers headers; will need new instance for each thread to stop data being edited
 	std::vector<char> buffer;
 	std::string header_to_send;

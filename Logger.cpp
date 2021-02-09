@@ -1,10 +1,8 @@
 #include "Logger.hpp"
 
-std::mutex file_lock; // any other way to initialize? 
-// putting in class member variables, the functions do not have access
+std::mutex file_lock;
 
 
-Logger::~Logger()
 {
     log_file.close();
 }
@@ -27,9 +25,9 @@ void Logger::open_file()
 }
 
 
+// operator overload code adapted from (cppreference.com, 2021b)
 Logger& operator<<(Logger& log, std::string text)
 {
-   // std::string file_name = log.get_fname();
     std::lock_guard<std::mutex> file_locking(file_lock);
     std::cout << "Mutex Locked!\n";
     if (!log.log_file.is_open()) {

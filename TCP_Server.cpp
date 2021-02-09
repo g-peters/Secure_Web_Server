@@ -11,7 +11,14 @@ TCP_Server::TCP_Server(boost::asio::io_context& io, USHORT port, Logger& log, Lo
 	// on server start, checks if uploads directory exists, if not creates it
 	if (!boost::filesystem::exists("uploads")) 
 	{
-		boost::filesystem::create_directory("uploads");
+		try
+		{
+			boost::filesystem::create_directory("uploads");
+		}
+		catch(std::exception e)
+		{
+			err_log << e.what();
+		}
 	}
 	// listen for new connections
 	listen_connections(io, port);

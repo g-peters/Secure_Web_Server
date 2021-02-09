@@ -64,6 +64,10 @@ std::string HTTP_Headers::get_201()
 {
 	return html_201;
 }
+std::string HTTP_Headers::get_405()
+{
+	return html_405;
+}
 HTTP_Headers::HTTP_Headers()
 {
 	http_header_1 = "HTTP/1.1 ";
@@ -119,7 +123,21 @@ HTTP_Headers::HTTP_Headers()
 		"</div>"
 		"</body>"
 		"</html>";
-
+	html_405 =
+		"<!DOCTYPE html>"
+		"<html>"
+		"<head>"
+		"<title>"
+		"Home"
+		"</title>"
+		"<link rel = \"stylesheet\" href = \"stylesheet.css\" >"
+		"</head>"
+		"<div id = \"main\">"
+		"<h1>405 Method not allowed</H1>"
+		"<body>"
+		"</div>"
+		"</body>"
+		"</html>";
 
 
 }

@@ -1,12 +1,10 @@
 #main{
-	text-align: center;
-	text-decoration: none;
-  position: absolute;
-  position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-
-        padding: 70px;
-
+   text-align: center;
+   text-decoration: none;
+   position: absolute;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   padding: 70px;
 }
